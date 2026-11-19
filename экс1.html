@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Специальные знания — тренажёр</title>
+<style>
+  :root{
+    --bg:         #F5F5F5;
+    --purple:     #D4B8F0;
+    --purple-btn: #C9A7E8;
+    --purple-dark:#A87FD0;
+    --ink:        #1A1A1A;
+    --ink-soft:   #5A5A5A;
+    --cell-bg:    #FFFFFF;
+    --cell-border:#D9D9D9;
+    --success:    #4CAF50;
+    --error:      #E53935;
+    --success-bg: #E8F5E9;
+    --error-bg:   #FFEBEE;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+    font-family: "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .trainer{ width: 100%; max-width: 980px; }
+
+  /* ── Заголовок ─────────────────────────────── */
+  .title-block{
+    background: var(--purple);
+    color: var(--ink);
+    text-align: center;
+    padding: 22px 24px;
+    border-radius: 14px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    margin-bottom: 28px;
+  }
+
+  /* ── Две колонки ───────────────────────────── */
+  .columns{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 36px;
+  }
+
+  .column__title{
+    background: var(--purple);
+    color: var(--ink);
+    text-align: center;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 16px;
+  }
+
+  .cells{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .cell{
+    min-height: 84px;
+    background: var(--cell-bg);
+    border: 2px dashed var(--cell-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    transition: border-color .2s, background .2s;
+  }
+
+  /* Подсветка при перетаскивании или выборе */
+  .cell.is-over, .cell.is-selected-target {
+    border-color: var(--purple-dark);
+    background: #FAF5FF;
+  }
+
+  .cell.is-correct{
+    border-color: var(--success);
+    background: var(--success-bg);
+    color: #2E7D32;
+  }
+
+  .cell.is-wrong{
+    border-color: var(--error);
+    background: var(--error-bg);
+    color: #C62828;
+  }
+
+  /* ── Блок вариантов ────────────────────────── */
+  .variants-wrapper {
+    position: relative;
+  }
+
+  .variants-title{
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    color: var(--ink);
+  }
+
+  .variants{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-height: 120px;
+    padding: 16px;
+    background: var(--cell-bg);
+    border-radius: 12px;
+    border: 1px solid var(--cell-border);
+    align-content: flex-start;
+  }
+
+  .variant{
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--cell-bg);
+    border: 1px solid var(--cell-border);
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 1.35;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.06);
+    transition: box-shadow .2s, transform .1s, border-color .2s;
+  }
+
+  .variant:active{ transform: scale(0.98); }
+  .variant.is-dragging{ opacity: .4; }
+
+  .variant.is-selected {
+    border-color: var(--purple-dark);
+    box-shadow: 0 0 0 2px var(--purple);
+    background: #FAF5FF;
+  }
+
+  /* ── Оверлей с результатом ─────────────────── */
+  .feedback-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    z-index: 10;
+    border: 2px solid transparent;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .feedback-overlay.is-visible {
+    display: flex;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .feedback-overlay.is-success { border-color: var(--success); }
+  .feedback-overlay.is-error { border-color: var(--error); }
+
+  .feedback-message {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    max-width: 600px;
+  }
+  .feedback-message.success { color: var(--success); }
+  .feedback-message.error { color: var(--error); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── Кнопки ────────────────────────────────── */
+  .actions{
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  .btn{
+    padding: 13px 32px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    background: var(--purple-btn);
+    color: var(--ink);
+    box-shadow: 0 4px 14px rgba(180, 140, 220, .35);
+    transition: background .2s, transform .1s, box-shadow .2s;
+  }
+
+  .btn:hover{ background: var(--purple); }
+  .btn:active{ transform: translateY(1px); }
+
+  /* ── Адаптив ───────────────────────────────── */
+  @media (max-width: 760px){
+    .columns{ grid-template-columns: 1fr; }
+    .title-block{ font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="trainer">
+
+  <div class="title-block">Специальные знания</div>
+
+  <div class="columns">
+    <!-- Колонка 1: Заключение специалиста -->
+    <div class="column">
+      <h2 class="column__title">Заключение специалиста</h2>
+      <div class="cells" id="col1">
+        <!-- Правильные ID: 1, 3, 5 -->
+        <div class="cell" data-answer="1" data-col="1"></div>
+        <div class="cell" data-answer="3" data-col="1"></div>
+        <div class="cell" data-answer="5" data-col="1"></div>
+      </div>
+    </div>
+
+    <!-- Колонка 2: Судебная экспертиза -->
+    <div class="column">
+      <h2 class="column__title">Судебная экспертиза</h2>
+      <div class="cells" id="col2">
+        <!-- Правильные ID: 2, 4, 6 -->
+        <div class="cell" data-answer="2" data-col="2"></div>
+        <div class="cell" data-answer="4" data-col="2"></div>
+        <div class="cell" data-answer="6" data-col="2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="variants-wrapper">
+    <p class="variants-title">Варианты</p>
+    <div class="variants" id="variants">
+      <div class="variant" draggable="true" data-id="1">По инициативе сторон</div>
+      <div class="variant" draggable="true" data-id="2">По определению суда</div>
+      <div class="variant" draggable="true" data-id="3">До суда или в ходе судебного разбирательства</div>
+      <div class="variant" draggable="true" data-id="4">После возбуждения дела</div>
+      <div class="variant" draggable="true" data-id="5">Оценка доказательств, подготовка позиции, разъяснение специальных вопросов</div>
+      <div class="variant" draggable="true" data-id="6">Исследование обстоятельств, требующих специальных знаний, в особой форме (экспертиза)</div>
+    </div>
+    
+    <!-- Оверлей с результатом -->
+    <div class="feedback-overlay" id="feedbackOverlay">
+      <div class="feedback-message" id="feedbackMessage"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="resetBtn" type="button">Сбросить</button>
+    <button class="btn" id="checkBtn" type="button">Проверить решение</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const variantsContainer = document.getElementById('variants');
+  const cells = document.querySelectorAll('.cell');
+  const resetBtn = document.getElementById('resetBtn');
+  const checkBtn = document.getElementById('checkBtn');
+  const overlay = document.getElementById('feedbackOverlay');
+  const feedbackMsg = document.getElementById('feedbackMessage');
+
+  let draggedEl = null;
+  let selectedVariant = null; // Для режима кликов
+
+  /* ── Инициализация плашек ───────────────────── */
+  document.querySelectorAll('.variant').forEach(variant => {
+    // Перетаскивание
+    variant.addEventListener('dragstart', e => {
+      draggedEl = variant;
+      variant.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', variant.dataset.id);
+    });
+
+    variant.addEventListener('dragend', () => {
+      variant.classList.remove('is-dragging');
+      draggedEl = null;
+    });
+
+    // Выбор по клику
+    variant.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (variant.classList.contains('is-selected')) {
+        variant.classList.remove('is-selected');
+        selectedVariant = null;
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('is-selected-target'));
+      } else {
+        document.querySelectorAll('.variant').forEach(v => v.classList.remove('is-selected'));
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('is-selected-target'));
+        
+        variant.classList.add('is-selected');
+        selectedVariant = variant;
+        
+        // Подсвечиваем ячейки
+        document.querySelectorAll('.cell').forEach(c => c.classList.add('is-selected-target'));
+      }
+    });
+  });
+
+  /* ── Вспомогательная функция перемещения ───── */
+  function moveVariantToCell(variant, cell) {
+    const existing = cell.querySelector('.variant');
+    if (existing) {
+      variantsContainer.appendChild(existing); // Возвращаем старый в пул
+    }
+    
+    cell.appendChild(variant);
+    cell.classList.remove('is-correct', 'is-wrong', 'is-selected-target');
+    
+    // Снимаем выделение
+    variant.classList.remove('is-selected');
+    selectedVariant = null;
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('is-selected-target'));
+  }
+
+  /* ── Обработка ячеек ───────────────────────── */
+  cells.forEach(cell => {
+    cell.addEventListener('dragover', e => {
+      e.preventDefault();
+      cell.classList.add('is-over');
+    });
+
+    cell.addEventListener('dragleave', () => {
+      cell.classList.remove('is-over');
+    });
+
+    cell.addEventListener('drop', e => {
+      e.preventDefault();
+      cell.classList.remove('is-over');
+      if (!draggedEl) return;
+      moveVariantToCell(draggedEl, cell);
+    });
+
+    // Вставка по клику
+    cell.addEventListener('click', () => {
+      if (selectedVariant) {
+        moveVariantToCell(selectedVariant, cell);
+      }
+    });
+  });
+
+  /* ── Возврат в пул (Drag&Drop / Клик мимо) ─── */
+  variantsContainer.addEventListener('dragover', e => e.preventDefault());
+  variantsContainer.addEventListener('drop', e => {
+    e.preventDefault();
+    if (draggedEl) {
+      variantsContainer.appendChild(draggedEl);
+    }
+  });
+
+  variantsContainer.addEventListener('click', (e) => {
+    if (e.target === variantsContainer) {
+      document.querySelectorAll('.variant').forEach(v => v.classList.remove('is-selected'));
+      document.querySelectorAll('.cell').forEach(c => c.classList.remove('is-selected-target'));
+      selectedVariant = null;
+    }
+  });
+
+  /* ── Проверка решения ──────────────────────── */
+  checkBtn.addEventListener('click', () => {
+    let allCorrect = true;
+    
+    // Сброс предыдущих статусов
+    cells.forEach(cell => cell.classList.remove('is-correct', 'is-wrong', 'is-selected-target'));
+    document.querySelectorAll('.variant').forEach(v => v.classList.remove('is-selected'));
+    selectedVariant = null;
+
+    cells.forEach(cell => {
+      const variant = cell.querySelector('.variant');
+      const answerId = cell.dataset.answer;
+
+      if (!variant) {
+        cell.classList.add('is-wrong'); // Пустая ячейка = ошибка
+        allCorrect = false;
+      } else if (variant.dataset.id === answerId) {
+        cell.classList.add('is-correct');
+      } else {
+        cell.classList.add('is-wrong');
+        allCorrect = false;
+      }
+    });
+
+    // Настройка и показ плашки
+    overlay.classList.remove('is-success', 'is-error');
+    
+    if (allCorrect) {
+      feedbackMsg.textContent = "Все верно, Вы прекрасно справились!";
+      feedbackMsg.className = "feedback-message success";
+      overlay.classList.add('is-success');
+    } else {
+      feedbackMsg.textContent = "Нужно еще поработать с материалом. Нажмите \"Сбросить\" и выполните задание еще раз.";
+      feedbackMsg.className = "feedback-message error";
+      overlay.classList.add('is-error');
+    }
+    
+    overlay.classList.add('is-visible');
+  });
+
+  /* ── Сброс ─────────────────────────────────── */
+  resetBtn.addEventListener('click', () => {
+    overlay.classList.remove('is-visible', 'is-success', 'is-error');
+    
+    cells.forEach(cell => {
+      cell.classList.remove('is-correct', 'is-wrong', 'is-over', 'is-selected-target');
+      const variant = cell.querySelector('.variant');
+      if (variant) {
+        variantsContainer.appendChild(variant);
+      }
+    });
+
+    document.querySelectorAll('.variant').forEach(v => v.classList.remove('is-selected'));
+    selectedVariant = null;
+  });
+
+})();
+</script>
+
+</body>
+</html>
