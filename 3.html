@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор программ обучения</title>
+<style>
+  :root{
+    --beige:     #FDFBF7;
+    --gold:      #D4AF37;
+    --gold-soft: #E8D9A8;
+    --ink:       #2E2A24;
+    --ink-soft:  #6B6459;
+    --ink-mute:  #A69D8E;
+    --line:      #E9E3D7;
+    --pct:       0%;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{ height: 100%; }
+
+  body{
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    font-family: "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 560px at 50% -12%, #FFF8E9 0%, rgba(255,248,233,0) 62%),
+      var(--beige);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Карточка ── */
+  .card{
+    width: 100%;
+    max-width: 540px;
+    padding: 46px 44px 40px;
+    text-align: center;
+    background: #FFFFFF;
+    border: 1px solid rgba(212, 175, 55, .18);
+    border-radius: 28px;
+    box-shadow:
+      0 32px 64px -24px rgba(46, 42, 36, .18),
+      0 2px 8px rgba(46, 42, 36, .04);
+  }
+
+  .card__title{
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: #8A8071;
+  }
+
+  .card__divider{
+    width: 44px;
+    height: 2px;
+    margin: 16px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  /* ── Показатель часов ── */
+  .value{
+    margin-top: 26px;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1;
+  }
+
+  .value__num{
+    font-size: 60px;
+    font-weight: 600;
+    letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .value__unit{
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink-mute);
+  }
+
+  /* ── Ползунок ── */
+  .slider-wrap{ margin-top: 22px; }
+
+  input[type="range"]{
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* WebKit / Blink */
+  input[type="range"]::-webkit-slider-runnable-track{
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(
+      to right,
+      var(--gold) var(--pct),
+      var(--line) var(--pct)
+    );
+  }
+
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    margin-top: -9px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #F7E7B4 0%, var(--gold) 70%);
+    border: 3px solid #FFFFFF;
+    box-shadow:
+      0 4px 12px rgba(212, 175, 55, .45),
+      0 1px 3px rgba(46, 42, 36, .15);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+
+  input[type="range"]:active::-webkit-slider-thumb{
+    transform: scale(1.12);
+  }
+
+  input[type="range"]:focus-visible::-webkit-slider-thumb{
+    box-shadow: 0 0 0 7px rgba(212, 175, 55, .20);
+  }
+
+  /* Firefox */
+  input[type="range"]::-moz-range-track{
+    height: 4px;
+    border-radius: 999px;
+    background: var(--line);
+  }
+
+  input[type="range"]::-moz-range-progress{
+    height: 4px;
+    border-radius: 999px;
+    background: var(--gold);
+  }
+
+  input[type="range"]::-moz-range-thumb{
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #F7E7B4 0%, var(--gold) 70%);
+    border: 3px solid #FFFFFF;
+    box-shadow:
+      0 4px 12px rgba(212, 175, 55, .45),
+      0 1px 3px rgba(46, 42, 36, .15);
+    transition: transform .15s ease;
+  }
+
+  input[type="range"]:active::-moz-range-thumb{
+    transform: scale(1.12);
+  }
+
+  /* Шкала */
+  .scale{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    padding: 0 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-mute);
+  }
+
+  /* ── Плашка статуса ── */
+  .badge{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 26px;
+    padding: 14px 30px;
+    font-size: 17px;
+    font-weight: 600;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition:
+      color .3s ease,
+      background-color .3s ease,
+      border-color .3s ease,
+      box-shadow .3s ease;
+  }
+
+  .badge.is-gray{
+    color: #7A7368;
+    background: #F4F1EA;
+    border-color: #E7E1D6;
+    box-shadow: 0 8px 22px -10px rgba(46, 42, 36, .22);
+  }
+
+  .badge.is-green{
+    color: #3C7457;
+    background: #EEF6F1;
+    border-color: #D2E7DB;
+    box-shadow: 0 10px 24px -10px rgba(60, 116, 87, .35);
+  }
+
+  .badge.is-gold{
+    color: #7C5C10;
+    background: linear-gradient(135deg, #FCF4DE 0%, #F4E5B6 100%);
+    border-color: var(--gold-soft);
+    box-shadow: 0 10px 26px -10px rgba(212, 175, 55, .60);
+  }
+
+  /* ── Подсказка ── */
+  .hint{
+    margin: 16px auto 0;
+    max-width: 420px;
+    min-height: 44px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .hint b{
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  @media (max-width: 460px){
+    .card{ padding: 36px 24px 32px; border-radius: 24px; }
+    .value__num{ font-size: 50px; }
+    .badge{ font-size: 15px; padding: 13px 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <main class="card">
+    <h1 class="card__title">Объем программы</h1>
+    <div class="card__divider"></div>
+
+    <div class="value">
+      <span class="value__num" id="hoursValue">0</span>
+      <span class="value__unit" id="hoursUnit">часов</span>
+    </div>
+
+    <div class="slider-wrap">
+      <input
+        type="range"
+        id="hoursRange"
+        min="0" max="300" step="1" value="0"
+        aria-label="Количество часов программы"
+        aria-valuemin="0" aria-valuemax="300" aria-valuenow="0">
+      <div class="scale" aria-hidden="true">
+        <span>0 ч</span>
+        <span>300 ч</span>
+      </div>
+    </div>
+
+    <div class="badge is-gray" id="badge" role="status" aria-live="polite">
+      Выберите часы
+    </div>
+
+    <p class="hint" id="hint">
+      Передвиньте ползунок, чтобы узнать вид программы и документ.
+    </p>
+  </main>
+
+<script>
+(function () {
+  'use strict';
+
+  var slider    = document.getElementById('hoursRange');
+  var valueEl   = document.getElementById('hoursValue');
+  var unitEl    = document.getElementById('hoursUnit');
+  var badgeEl   = document.getElementById('badge');
+  var hintEl    = document.getElementById('hint');
+
+  var MAX = Number(slider.max) || 300;
+
+  function pluralHours(n) {
+    var a = Math.abs(n) % 100;
+    var b = a % 10;
+    if (a > 10 && a < 20) return 'часов';
+    if (b > 1 && b < 5)   return 'часа';
+    if (b === 1)          return 'час';
+    return 'часов';
+  }
+
+  function getStatus(h) {
+    if (h === 0) {
+      return {
+        label: 'Выберите часы',
+        cls:   'is-gray',
+        hint:  'Передвиньте ползунок, чтобы узнать вид программы и документ.'
+      };
+    }
+    if (h <= 15) {
+      return {
+        label: 'Микрокурс',
+        cls:   'is-gray',
+        hint:  'Документ: <b>сертификат</b> о прохождении микрокурса. Удостоверение и диплом не выдаются.'
+      };
+    }
+    if (h <= 249) {
+      return {
+        label: 'Повышение квалификации',
+        cls:   'is-green',
+        hint:  'Документ: <b>удостоверение</b> о повышении квалификации.'
+      };
+    }
+    return {
+      label: 'Профессиональная переподготовка',
+      cls:   'is-gold',
+      hint:  'Документ: <b>диплом</b> о профессиональной переподготовке.'
+    };
+  }
+
+  function update() {
+    var hours  = Number(slider.value);
+    var status = getStatus(hours);
+    var pct    = (hours / MAX) * 100;
+
+    /* Заливка трека: переменная ставится на :root, поэтому
+       гарантированно наследуется псевдоэлементами слайдера */
+    document.documentElement.style.setProperty('--pct', pct + '%');
+
+    valueEl.textContent = hours;
+    unitEl.textContent  = pluralHours(hours);
+
+    var labelChanged = badgeEl.textContent.trim() !== status.label;
+
+    badgeEl.textContent = status.label;
+    badgeEl.className   = 'badge ' + status.cls;
+    hintEl.innerHTML    = status.hint;
+
+    slider.setAttribute('aria-valuenow', hours);
+    slider.setAttribute('aria-valuetext',
+      hours + ' ' + pluralHours(hours) + '. ' + status.label);
+
+    if (labelChanged && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      badgeEl.animate(
+        [
+          { opacity: 0.35, transform: 'scale(0.96)' },
+          { opacity: 1,    transform: 'scale(1)'    }
+        ],
+        { duration: 260, easing: 'ease-out' }
+      );
+    }
+  }
+
+  slider.addEventListener('input', update);
+  slider.addEventListener('change', update);
+  update();
+})();
+</script>
+
+</body>
+</html>
